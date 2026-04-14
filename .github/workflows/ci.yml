@@ -65,7 +65,7 @@ jobs:
           context: ./node
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/devops-final:v-${{ github.run_number }}
             ${{ secrets.DOCKER_USERNAME }}/devops-final:latest
 
       # ─── 8. Trivy image scan ───
@@ -73,7 +73,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'image'
-          image-ref: '${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.sha }}'
+          image-ref: '${{ secrets.DOCKER_USERNAME }}/devops-final:v-${{ github.run_number }}'
           exit-code: '1'
           severity: 'CRITICAL'
           format: 'table'
