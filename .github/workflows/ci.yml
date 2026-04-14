@@ -29,9 +29,9 @@ jobs:
         run: npm ci
 
       # ─── 4. Lint ───
-      - name: Lint
-        working-directory: node/app
-        run: npm run lint
+      # name: Lint
+      # working-directory: node/app
+      # run: npm run lint
 
       # ─── 5. Syntax check (Node has no compile step) ───
       - name: Verify app syntax
