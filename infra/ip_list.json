@@ -1,0 +1,7 @@
+{
+  "DevOpsServerIp": {
+    "sensitive": false,
+    "type": "string",
+    "value": "54.79.53.221"
+  }
+}
