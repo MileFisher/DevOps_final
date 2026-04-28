@@ -103,12 +103,6 @@
         dest: "/home/{{ ansible_user }}/app/compose.yml"
         mode: '0644'
 
-    - name: Copy .env file to server
-      ansible.builtin.copy:
-        src: "../node/app/.env"
-        dest: "/home/{{ ansible_user }}/app/.env"
-        mode: '0644'
-
     - name: Start Docker Compose
       community.docker.docker_compose_v2:
         project_src: "/home/{{ ansible_user }}/app"

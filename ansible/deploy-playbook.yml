@@ -20,7 +20,7 @@
     - name: Pull latest images and restart containers
       community.docker.docker_compose_v2:
         project_src: "{{ project_path }}"
-        state: restarted
+        state: present
         pull: always
         recreate: auto
 
