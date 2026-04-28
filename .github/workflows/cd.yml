@@ -111,7 +111,7 @@ jobs:
         run: |
           ansible-playbook \
             -i infra/inventory.aws.ec2.yml \
-            ansible/templates/deploy-playbook.yml \
+            ansible/deploy-playbook.yml \
             --limit _Staging \
             
         env:
@@ -171,7 +171,7 @@ jobs:
         run: |
           ansible-playbook \
             -i infra/inventory.aws.ec2.yml \
-            ansible/templates/deploy-playbook.yml \
+            ansible/deploy-playbook.yml \
             --limit _Production 
           
         env:
