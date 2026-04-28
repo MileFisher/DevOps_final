@@ -1,7 +1,7 @@
 services:
   web:
-    image: sawbaw1/devops-midterm:latest
-    container_name: midterm_web
+    image: sawbaw1/devops-final:latest
+    container_name: final_web
     restart: unless-stopped
     ports:
       - "3001:3000"
@@ -14,7 +14,7 @@ services:
 
   mongo:
     image: mongo:6.0
-    container_name: midterm_mongo
+    container_name: final_mongo
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db
