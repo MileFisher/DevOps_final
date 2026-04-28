@@ -11,6 +11,12 @@
       run_once: true
       become: false
 
+    - name: Copy file and overwrite if different
+      ansible.builtin.copy:
+        src: ../docker-compose.yml
+        dest: "/home/{{ ansible_user }}/app/compose.yml"
+        force: true
+
     - name: Pull latest images and restart containers
       community.docker.docker_compose_v2:
         project_src: "{{ project_path }}"
