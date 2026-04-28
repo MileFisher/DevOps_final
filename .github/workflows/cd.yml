@@ -50,7 +50,7 @@ jobs:
         run: |
           ansible-playbook \
             -i infra/inventory.aws.ec2.yml \
-            ansible/templates/setup-docker.yml \
+            ansible/setup-docker.yml \
             --limit staging \
             --private-key ~/.ssh/DevopsFinalStagingKey \
             -e "domain_names=['staging.yourdomain.com']" \
@@ -62,7 +62,7 @@ jobs:
         run: |
           ansible-playbook \
             -i infra/inventory.aws.ec2.yml \
-            ansible/templates/setup-docker.yml \
+            ansible/setup-docker.yml \
             --limit production \
             --private-key ~/.ssh/SawBawDevOpsFinalKey \
             -e "domain_names=['yourdomain.com']" \
