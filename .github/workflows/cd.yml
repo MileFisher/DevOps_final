@@ -50,7 +50,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
           chmod 600 ~/.ssh/SawBawDevOpsFinalKey
-          echo "${{ secrets.SSH_STAGING_KEY }}" > ~/.ssh/DevopsFinalStagingKey
+          echo "${{ secrets.SSH_STAGE_KEY }}" > ~/.ssh/DevopsFinalStagingKey
           chmod 600 ~/.ssh/DevopsFinalStagingKey
 
       - name: Run Ansible setup on staging
@@ -67,10 +67,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit _Production \
-            --private-key ~/.ssh/SawBawDevOpsFinalKey \
-            -e "domain_names=['yourdomain.com']" \
-            -e "cert_email=${{ secrets.CERT_EMAIL }}"
+            --limit _Production
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -123,8 +120,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
-            --limit _Staging \
-            
+            --limit _Staging 
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -191,7 +187,6 @@ jobs:
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
             --limit _Production 
-          
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
