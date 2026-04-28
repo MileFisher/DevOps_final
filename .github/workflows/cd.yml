@@ -1,0 +1,187 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  # ─── 1. ANSIBLE SETUP (runs every deploy) ───
+  ansible-setup:
+    name: Setup Servers with Ansible
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible python3-pip
+          pip3 install boto3 botocore
+          ansible-galaxy collection install community.docker amazon.aws
+
+      - name: Create AWS credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [devopsFinal]
+          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [profile devopsFinal]
+          region=ap-southeast-2
+          EOF
+
+      - name: Create SSH keys
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
+          chmod 600 ~/.ssh/SawBawDevOpsFinalKey
+          echo "${{ secrets.SSH_STAGING_KEY }}" > ~/.ssh/DevopsFinalStagingKey
+          chmod 600 ~/.ssh/DevopsFinalStagingKey
+
+      - name: Run Ansible setup on staging
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/setup-docker.yml \
+            --limit staging \
+            --private-key ~/.ssh/DevopsFinalStagingKey \
+            -e "domain_names=['staging.yourdomain.com']" \
+            -e "cert_email=${{ secrets.CERT_EMAIL }}"
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Run Ansible setup on production
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/setup-docker.yml \
+            --limit production \
+            --private-key ~/.ssh/SawBawDevOpsFinalKey \
+            -e "domain_names=['yourdomain.com']" \
+            -e "cert_email=${{ secrets.CERT_EMAIL }}"
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  # ─── 2. DEPLOY TO STAGING (automatic) ───
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: ansible-setup
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible python3-pip
+          pip3 install boto3 botocore
+          ansible-galaxy collection install community.docker amazon.aws
+
+      - name: Create AWS credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [devopsFinal]
+          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [profile devopsFinal]
+          region=ap-southeast-2
+          EOF
+
+      - name: Create SSH key for staging
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGE_KEY }}" > ~/.ssh/DevopsFinalStagingKey
+          chmod 600 ~/.ssh/DevopsFinalStagingKey
+
+      - name: Deploy to Staging via Ansible
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/deploy-playbook.yml \
+            --limit _Staging \
+            
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Staging summary
+        run: echo "Staging deployment complete"
+
+  # ─── 3. MANUAL APPROVAL GATE ───
+  approval:
+    name: Waiting for Approval to deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment: production-approval
+
+    steps:
+      - name: Approved
+        run: echo "Approved - deploying to production"
+
+  # ─── 4. DEPLOY TO PRODUCTION (after approval) ───
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: approval
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible python3-pip
+          pip3 install boto3 botocore
+          ansible-galaxy collection install community.docker amazon.aws
+
+      - name: Create AWS credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [devopsFinal]
+          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [profile devopsFinal]
+          region=ap-southeast-2
+          EOF
+
+      - name: Create SSH key for production
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
+          chmod 600 ~/.ssh/SawBawDevOpsFinalKey
+
+      - name: Deploy to Production via Ansible
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/deploy-playbook.yml \
+            --limit _Production 
+          
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Production summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "Production deployment complete"
+          else
+            echo "Production deployment failed"
+          fi
