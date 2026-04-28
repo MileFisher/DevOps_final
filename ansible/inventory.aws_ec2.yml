@@ -1,0 +1,19 @@
+plugin : amazon.aws.aws_ec2
+profile : devopsFinal
+
+regions:
+  - ap-southeast-2
+
+filters:
+  tag:Project:
+    - DevopsFinal
+
+keyed_groups:
+  - key: tags.Type
+
+hostnames:
+  - tag:Name
+  - ip-address
+
+compose:
+  ansible_host: public_ip_address

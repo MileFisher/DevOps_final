@@ -1,0 +1,20 @@
+- name: Pull and Restart Docker Compose Project
+  hosts: aws_ec2
+  become: true
+  vars:
+    project_path: "/home/{{ ansible_user }}/app"
+
+  tasks:
+    - name: Ensure community.docker collection is installed
+      delegate_to: localhost
+      ansible.builtin.command: ansible-galaxy collection install community.docker
+      run_once: true
+      become: false
+
+    - name: Pull latest images and restart containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_path }}"
+        state: present
+        pull: always
+        recreate: auto
+

@@ -36,7 +36,7 @@ resource "aws_subnet" "DevopsFinalPublicSubnet" {
 	}
 }
 
-resource "aws_route_table_association" "devopsRTA" {
+resource "aws_route_table_association" "DevopsRTA" {
 	subnet_id = resource.aws_subnet.DevopsFinalPublicSubnet.id
 	route_table_id = resource.aws_route_table.DevopsFinalRouteTable.id
 }
