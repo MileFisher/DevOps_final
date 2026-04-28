@@ -81,7 +81,7 @@
 #        state: link
 #      notify: Reload Nginx
 
-
+# TODO: find out if cert creation is run everytime 
 
     - name: Create SSL certificate via Certbot
       ansible.builtin.command: >
@@ -108,7 +108,7 @@
         src: "../node/app/.env"
         dest: "/home/{{ ansible_user }}/app/.env"
         mode: '0644'
-        
+
     - name: Start Docker Compose
       community.docker.docker_compose_v2:
         project_src: "/home/{{ ansible_user }}/app"
