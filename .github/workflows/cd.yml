@@ -67,7 +67,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit _Production \
+            --limit _Production
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -186,7 +186,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
-            --limit _Production \
+            --limit _Production 
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
