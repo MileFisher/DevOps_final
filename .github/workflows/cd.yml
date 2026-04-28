@@ -48,9 +48,9 @@ jobs:
       - name: Create SSH keys
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
+          echo "${{ secrets.PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
           chmod 600 ~/.ssh/SawBawDevOpsFinalKey
-          echo "${{ secrets.SSH_STAGE_KEY }}" > ~/.ssh/DevopsFinalStagingKey
+          echo "${{ secrets.STAGE_KEY }}" > ~/.ssh/DevopsFinalStagingKey
           chmod 600 ~/.ssh/DevopsFinalStagingKey
 
       - name: Run Ansible setup on staging
