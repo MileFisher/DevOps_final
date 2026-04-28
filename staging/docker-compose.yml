@@ -1,0 +1,33 @@
+services:
+  web:
+    image: ${WEB_IMAGE:-sawbaw1/devops-final:latest}
+    container_name: staging_web
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    volumes:
+      - uploads_data:/app/public/uploads
+    networks:
+      - app_network
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    container_name: staging_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+      - ./dump:/dump
+    networks:
+      - app_network
+
+volumes:
+  staging_uploads:
+    driver: local
+  staging_mongo:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
