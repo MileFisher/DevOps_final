@@ -13,7 +13,7 @@ data "aws_ami" "ubuntu" {
 	owners = ["099720109477"]
 }
 
-resource "aws_key_pair" "DevOpsFinalKey" {
+resource "aws_key_pair" "DevopsFinalKey" {
 	key_name = var.key_name
 	public_key = var.pub_key
 
@@ -22,11 +22,11 @@ resource "aws_key_pair" "DevOpsFinalKey" {
 	}
 }
 
-resource "aws_instance" "devopsFinalServer" {
+resource "aws_instance" "DevopsFinalServer" {
 	ami = data.aws_ami.ubuntu.id
 	instance_type = var.instance_type
 
-	key_name = resource.aws_key_pair.DevOpsFinalKey.key_name
+	key_name = resource.aws_key_pair.DevopsFinalKey.key_name
 	
 	subnet_id = resource.aws_subnet.DevopsFinalPublicSubnet.id
 	vpc_security_group_ids = [resource.aws_security_group.DevopsFinalSG.id]
@@ -37,12 +37,13 @@ resource "aws_instance" "devopsFinalServer" {
 	tags = {
 		Name = var.instance_name
 		Project = var.project_tag_val
+		Type = "Production"
 	}
 }
 
 
-resource "aws_eip" "devopsFinalServerEip" {
+resource "aws_eip" "DevopsFinalServerEip" {
 	domain = "vpc"
-	instance = resource.aws_instance.devopsFinalServer.id
+	instance = resource.aws_instance.DevopsFinalServer.id
 	depends_on = [resource.aws_internet_gateway.gw]
 }

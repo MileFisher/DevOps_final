@@ -1,0 +1,10 @@
+- name: Deploy to production servers
+  hosts: aws_ec2
+  tasks:
+    - name: Create project directory
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/app"
+        state: directory
+        mode: "0755"
+
+

@@ -3,3 +3,4 @@ node/app/node_modules/*
 infra/vars.tfvars
 infra/*.tfstate*
 infra/.terraform*
+env*
