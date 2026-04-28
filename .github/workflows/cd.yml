@@ -49,7 +49,7 @@ jobs:
       - name: Run Ansible setup on staging
         run: |
           ansible-playbook \
-            -i infra/inventory.aws.ec2.yml \
+            -i ansible/inventory.aws.ec2.yml \
             ansible/setup-docker.yml \
             --limit staging \
             --private-key ~/.ssh/DevopsFinalStagingKey \
@@ -61,7 +61,7 @@ jobs:
       - name: Run Ansible setup on production
         run: |
           ansible-playbook \
-            -i infra/inventory.aws.ec2.yml \
+            -i ansible/inventory.aws.ec2.yml \
             ansible/setup-docker.yml \
             --limit production \
             --private-key ~/.ssh/SawBawDevOpsFinalKey \
@@ -110,7 +110,7 @@ jobs:
       - name: Deploy to Staging via Ansible
         run: |
           ansible-playbook \
-            -i infra/inventory.aws.ec2.yml \
+            -i ansible/inventory.aws.ec2.yml \
             ansible/deploy-playbook.yml \
             --limit _Staging \
             
@@ -170,7 +170,7 @@ jobs:
       - name: Deploy to Production via Ansible
         run: |
           ansible-playbook \
-            -i infra/inventory.aws.ec2.yml \
+            -i ansible/inventory.aws.ec2.yml \
             ansible/deploy-playbook.yml \
             --limit _Production 
           
