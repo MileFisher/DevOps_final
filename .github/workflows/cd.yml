@@ -10,7 +10,7 @@ on:
 jobs:
   # ─── 1. ANSIBLE SETUP (runs every deploy) ───
   ansible-setup:
-    name: Setup Server with Ansible
+    name: Setup Servers with Ansible
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
@@ -18,21 +18,55 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Ansible
+      - name: Install Ansible and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ansible
+          sudo apt-get install -y ansible python3-pip
+          pip3 install boto3 botocore
+          ansible-galaxy collection install community.docker amazon.aws
 
-      - name: Setup SSH key
+      - name: Create AWS credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [devopsFinal]
+          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [profile devopsFinal]
+          region=ap-southeast-2
+          EOF
+
+      - name: Create SSH keys
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
+          chmod 600 ~/.ssh/SawBawDevOpsFinalKey
+          echo "${{ secrets.SSH_STAGING_KEY }}" > ~/.ssh/DevopsFinalStagingKey
+          chmod 600 ~/.ssh/DevopsFinalStagingKey
 
-      - name: Run Ansible playbook
+      - name: Run Ansible setup on staging
         run: |
-          ansible-playbook -i infra/inventory.yml infra/setup.yml
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/setup-docker.yml \
+            --limit staging \
+            --private-key ~/.ssh/DevopsFinalStagingKey \
+            -e "domain_names=['staging.yourdomain.com']" \
+            -e "cert_email=${{ secrets.CERT_EMAIL }}"
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Run Ansible setup on production
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/setup-docker.yml \
+            --limit production \
+            --private-key ~/.ssh/SawBawDevOpsFinalKey \
+            -e "domain_names=['yourdomain.com']" \
+            -e "cert_email=${{ secrets.CERT_EMAIL }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -44,45 +78,47 @@ jobs:
     environment: staging
 
     steps:
-      - name: Set image tag
-        id: tag
-        run: echo "IMAGE_TAG=v-${{ github.event.workflow_run.run_number }}" >> $GITHUB_OUTPUT
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Deploy to Staging via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd /opt/devops-final/staging
-            export IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
-            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+      - name: Install Ansible and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible python3-pip
+          pip3 install boto3 botocore
+          ansible-galaxy collection install community.docker amazon.aws
 
-            echo "Pulling image: $DOCKER_USERNAME/devops-final:$IMAGE_TAG"
-            docker pull $DOCKER_USERNAME/devops-final:$IMAGE_TAG
+      - name: Create AWS credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [devopsFinal]
+          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [profile devopsFinal]
+          region=ap-southeast-2
+          EOF
 
-            echo "WEB_IMAGE=$DOCKER_USERNAME/devops-final:$IMAGE_TAG" > .env
+      - name: Create SSH key for staging
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGE_KEY }}" > ~/.ssh/DevopsFinalStagingKey
+          chmod 600 ~/.ssh/DevopsFinalStagingKey
 
-            docker compose -p staging up -d --no-deps --pull never web
-            docker image prune -f
-
-            echo "Waiting for staging to become healthy..."
-            for i in $(seq 1 10); do
-              if curl -sf http://localhost:3002/ > /dev/null 2>&1; then
-                echo "Staging is up!"
-                break
-              fi
-              if [ "$i" -eq 10 ]; then
-                echo "Staging health check failed"
-                exit 1
-              fi
-              sleep 3
-            done
+      - name: Deploy to Staging via Ansible
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/deploy-playbook.yml \
+            --limit _Staging \
+            
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
 
       - name: Staging summary
-        run: echo "Staging deployment complete - ${{ steps.tag.outputs.IMAGE_TAG }}"
+        run: echo "Staging deployment complete"
 
   # ─── 3. MANUAL APPROVAL GATE ───
   approval:
@@ -102,48 +138,50 @@ jobs:
     needs: approval
 
     steps:
-      - name: Set image tag
-        id: tag
-        run: echo "IMAGE_TAG=v-${{ github.event.workflow_run.run_number }}" >> $GITHUB_OUTPUT
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Deploy to Production via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd /opt/devops-final/production
-            export IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
-            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+      - name: Install Ansible and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible python3-pip
+          pip3 install boto3 botocore
+          ansible-galaxy collection install community.docker amazon.aws
 
-            echo "Pulling image: $DOCKER_USERNAME/devops-final:$IMAGE_TAG"
-            docker pull $DOCKER_USERNAME/devops-final:$IMAGE_TAG
+      - name: Create AWS credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [devopsFinal]
+          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [profile devopsFinal]
+          region=ap-southeast-2
+          EOF
 
-            echo "WEB_IMAGE=$DOCKER_USERNAME/devops-final:$IMAGE_TAG" > .env
+      - name: Create SSH key for production
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_KEY }}" > ~/.ssh/SawBawDevOpsFinalKey
+          chmod 600 ~/.ssh/SawBawDevOpsFinalKey
 
-            docker compose -p production up -d --no-deps --pull never web
-            docker image prune -f
-
-            echo "Waiting for production to become healthy..."
-            for i in $(seq 1 10); do
-              if curl -sf http://localhost:3001/ > /dev/null 2>&1; then
-                echo "Production is up!"
-                break
-              fi
-              if [ "$i" -eq 10 ]; then
-                echo "Production health check failed"
-                exit 1
-              fi
-              sleep 3
-            done
+      - name: Deploy to Production via Ansible
+        run: |
+          ansible-playbook \
+            -i infra/inventory.aws.ec2.yml \
+            ansible/templates/deploy-playbook.yml \
+            --limit _Production 
+          
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
 
       - name: Production summary
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "Production deployment complete - ${{ steps.tag.outputs.IMAGE_TAG }}"
+            echo "Production deployment complete"
           else
-            echo "Production deployment failed - ${{ steps.tag.outputs.IMAGE_TAG }}"
+            echo "Production deployment failed"
           fi
