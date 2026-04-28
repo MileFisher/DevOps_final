@@ -54,11 +54,17 @@
         state: present
         update_cache: true
 
+    - name: Check if certificate already exists
+      ansible.builtin.stat:
+        path: "/etc/letsencrypt/live/{{ domain_names[0] }}/fullchain.pem"
+      register: cert_data    
+
     - name: Setup Nginx configuration
       ansible.builtin.template:
         src: nginx.conf.j2
         dest: /etc/nginx/nginx.conf
         mode: '0644'
+      when: not cert_data.stat.exists
       notify: Reload Nginx
 
 #    - name: Setup Nginx site configuration
@@ -75,10 +81,7 @@
 #        state: link
 #      notify: Reload Nginx
 
-    - name: Check if certificate already exists
-      ansible.builtin.stat:
-        path: "/etc/letsencrypt/live/{{ domain_names[0] }}/fullchain.pem"
-      register: cert_data
+# TODO: find out if cert creation is run everytime 
 
     - name: Create SSL certificate via Certbot
       ansible.builtin.command: >

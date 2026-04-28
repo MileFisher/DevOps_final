@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/products_db
     volumes:
       - uploads_data:/app/public/uploads
     networks:
