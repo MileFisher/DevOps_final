@@ -25,18 +25,25 @@ jobs:
           pipx inject ansible-core boto3 botocore
           ansible-galaxy collection install community.docker amazon.aws
 
-      - name: Create AWS credentials
-        run: |
-          mkdir -p ~/.aws
-          cat <<EOF > ~/.aws/credentials
-          [devopsFinal]
-          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          EOF
-          cat <<EOF > ~/.aws/config
-          [profile devopsFinal]
-          region=ap-southeast-2
-          EOF
+      # - name: Create AWS credentials
+      #   run: |
+      #     mkdir -p ~/.aws
+      #     cat <<EOF > ~/.aws/credentials
+      #     [devopsFinal]
+      #     aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+      #     aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+      #     EOF
+      #     cat <<EOF > ~/.aws/config
+      #     [profile devopsFinal]
+      #     region=ap-southeast-2
+      #     EOF
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ap-southeast-2
 
       - name: Create SSH keys
         run: |
@@ -51,10 +58,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit staging \
-            --private-key ~/.ssh/DevopsFinalStagingKey \
-            -e "domain_names=['staging.yourdomain.com']" \
-            -e "cert_email=${{ secrets.CERT_EMAIL }}"
+            --limit _Staging \
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -63,7 +67,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit production \
+            --limit _Production \
             --private-key ~/.ssh/SawBawDevOpsFinalKey \
             -e "domain_names=['yourdomain.com']" \
             -e "cert_email=${{ secrets.CERT_EMAIL }}"
@@ -88,18 +92,25 @@ jobs:
           pipx inject ansible-core boto3 botocore
           ansible-galaxy collection install community.docker amazon.aws
 
-      - name: Create AWS credentials
-        run: |
-          mkdir -p ~/.aws
-          cat <<EOF > ~/.aws/credentials
-          [devopsFinal]
-          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
-          EOF
-          cat <<EOF > ~/.aws/config
-          [profile devopsFinal]
-          region=ap-southeast-2
-          EOF
+      # - name: Create AWS credentials
+      #   run: |
+      #     mkdir -p ~/.aws
+      #     cat <<EOF > ~/.aws/credentials
+      #     [devopsFinal]
+      #     aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+      #     aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+      #     EOF
+      #     cat <<EOF > ~/.aws/config
+      #     [profile devopsFinal]
+      #     region=ap-southeast-2
+      #     EOF
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ap-southeast-2
 
       - name: Create SSH key for staging
         run: |
@@ -148,18 +159,25 @@ jobs:
           pipx inject ansible-core boto3 botocore
           ansible-galaxy collection install community.docker amazon.aws
 
-      - name: Create AWS credentials
-        run: |
-          mkdir -p ~/.aws
-          cat <<EOF > ~/.aws/credentials
-          [devopsFinal]
-          aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
-          EOF
-          cat <<EOF > ~/.aws/config
-          [profile devopsFinal]
-          region=ap-southeast-2
-          EOF
+      # - name: Create AWS credentials
+      #   run: |
+      #     mkdir -p ~/.aws
+      #     cat <<EOF > ~/.aws/credentials
+      #     [devopsFinal]
+      #     aws_access_key_id=${{ secrets.AWS_ACCESS_KEY }}
+      #     aws_secret_access_key=${{ secrets.AWS_SECRET_KEY }}
+      #     EOF
+      #     cat <<EOF > ~/.aws/config
+      #     [profile devopsFinal]
+      #     region=ap-southeast-2
+      #     EOF
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ap-southeast-2
 
       - name: Create SSH key for production
         run: |
