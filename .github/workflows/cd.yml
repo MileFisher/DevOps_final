@@ -8,11 +8,39 @@ on:
     branches: [main]
 
 jobs:
-  # ─── STAGING DEPLOY (automatic) ───
+  # ─── 1. ANSIBLE SETUP (runs every deploy) ───
+  ansible-setup:
+    name: Setup Server with Ansible
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Run Ansible playbook
+        run: |
+          ansible-playbook -i infra/inventory.yml infra/setup.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  # ─── 2. DEPLOY TO STAGING (automatic) ───
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: ansible-setup
     environment: staging
 
     steps:
@@ -31,15 +59,19 @@ jobs:
             cd /opt/devops-final/staging
             export IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+
             echo "Pulling image: $DOCKER_USERNAME/devops-final:$IMAGE_TAG"
             docker pull $DOCKER_USERNAME/devops-final:$IMAGE_TAG
+
             echo "WEB_IMAGE=$DOCKER_USERNAME/devops-final:$IMAGE_TAG" > .env
+
             docker compose -p staging up -d --no-deps --pull never web
             docker image prune -f
-            echo "Waiting for staging app to become healthy..."
+
+            echo "Waiting for staging to become healthy..."
             for i in $(seq 1 10); do
               if curl -sf http://localhost:3002/ > /dev/null 2>&1; then
-                echo "Staging app is up after $((i * 3))s"
+                echo "Staging is up!"
                 break
               fi
               if [ "$i" -eq 10 ]; then
@@ -50,20 +82,20 @@ jobs:
             done
 
       - name: Staging summary
-        run: echo "✅ Staging deployment complete for ${{ steps.tag.outputs.IMAGE_TAG }}"
+        run: echo "Staging deployment complete - ${{ steps.tag.outputs.IMAGE_TAG }}"
 
-  # ─── MANUAL APPROVAL GATE ───
+  # ─── 3. MANUAL APPROVAL GATE ───
   approval:
-    name: Waiting for Manual Approval
+    name: Waiting for Approval to deploy to Production
     runs-on: ubuntu-latest
     needs: deploy-staging
-    environment: production-approval   
+    environment: production-approval
 
     steps:
       - name: Approved
-        run: echo "✅ Approved — proceeding to production deployment"
+        run: echo "Approved - deploying to production"
 
-  # ─── PRODUCTION DEPLOY (after approval) ───
+  # ─── 4. DEPLOY TO PRODUCTION (after approval) ───
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -85,19 +117,23 @@ jobs:
             cd /opt/devops-final/production
             export IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+
             echo "Pulling image: $DOCKER_USERNAME/devops-final:$IMAGE_TAG"
             docker pull $DOCKER_USERNAME/devops-final:$IMAGE_TAG
+
             echo "WEB_IMAGE=$DOCKER_USERNAME/devops-final:$IMAGE_TAG" > .env
+
             docker compose -p production up -d --no-deps --pull never web
             docker image prune -f
-            echo "Waiting for production app to become healthy..."
+
+            echo "Waiting for production to become healthy..."
             for i in $(seq 1 10); do
               if curl -sf http://localhost:3001/ > /dev/null 2>&1; then
-                echo "Production app is up after $((i * 3))s"
+                echo "Production is up!"
                 break
               fi
               if [ "$i" -eq 10 ]; then
-                echo "Production health check failed - rolling back"
+                echo "Production health check failed"
                 exit 1
               fi
               sleep 3
@@ -107,7 +143,7 @@ jobs:
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "✅ Production deployment complete for ${{ steps.tag.outputs.IMAGE_TAG }}"
+            echo "Production deployment complete - ${{ steps.tag.outputs.IMAGE_TAG }}"
           else
-            echo "❌ Production deployment failed for ${{ steps.tag.outputs.IMAGE_TAG }}"
+            echo "Production deployment failed - ${{ steps.tag.outputs.IMAGE_TAG }}"
           fi
