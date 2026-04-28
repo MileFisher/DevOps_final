@@ -22,7 +22,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-pip
-          pipx inject boto3 botocore
+          pipx inject ansible-core boto3 botocore
           ansible-galaxy collection install community.docker amazon.aws
 
       - name: Create AWS credentials
@@ -85,7 +85,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-pip
-          pipx inject boto3 botocore
+          pipx inject ansible-core boto3 botocore
           ansible-galaxy collection install community.docker amazon.aws
 
       - name: Create AWS credentials
@@ -145,7 +145,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-pip
-          pipx inject boto3 botocore
+          pipx inject ansible-core boto3 botocore
           ansible-galaxy collection install community.docker amazon.aws
 
       - name: Create AWS credentials
