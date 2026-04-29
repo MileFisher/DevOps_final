@@ -34,6 +34,11 @@ resource "aws_instance" "DevopsFinalServer" {
 	associate_public_ip_address = true
 	depends_on = [resource.aws_vpc.DevopsFinalVpc, resource.aws_internet_gateway.gw]
 
+	root_block_device {
+		volume_size = var.root_volume_size
+		volume_type = "gp3"
+	}
+
 	tags = {
 		Name = var.instance_name
 		Project = var.project_tag_val
