@@ -19,12 +19,22 @@
         force: true
         mode: '0644'
 
+    - name: Copy monitoring configuration
+      ansible.builtin.copy:
+        src: ../monitoring
+        dest: "{{ project_path }}/"
+        force: true
+        mode: preserve
+
     - name: Write WEB_IMAGE for Docker Compose
       ansible.builtin.copy:
         dest: "{{ project_path }}/.env"
         content: |
           WEB_IMAGE={{ web_image | mandatory }}
           APP_VERSION={{ web_image | mandatory | regex_replace('^.*:', '') }}
+          GRAFANA_ADMIN_USER=admin
+          GRAFANA_ADMIN_PASSWORD={{ grafana_admin_password | mandatory }}
+          GF_SERVER_ROOT_URL=https://{{ domain_names[0] }}/grafana/
         mode: '0644'
 
     - name: Pull versioned image and restart containers
