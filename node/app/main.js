@@ -17,6 +17,15 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    version: process.env.APP_VERSION || 'local',
+    dataSource: dataSource.isMongo ? 'mongodb' : 'in-memory',
+    hostname: os.hostname()
+  });
+});
+
 app.use('/', uiRoutes);
 app.use('/products', productRoutes);
 

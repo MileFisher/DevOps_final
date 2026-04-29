@@ -177,6 +177,7 @@ button {
 .host-pill {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 12px 16px;
   border: 1px solid var(--border);
@@ -190,6 +191,7 @@ button {
 .host-pill strong {
   color: var(--ink);
   font-weight: 800;
+  word-break: break-word;
 }
 
 .hero-layout {

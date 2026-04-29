@@ -3,6 +3,7 @@
   become: true
   vars:
     project_path: "/home/{{ ansible_user }}/app"
+    web_replicas: 2
 
   tasks:
     - name: Ensure community.docker collection is installed
@@ -11,17 +12,20 @@
       run_once: true
       become: false
 
-    - name: Copy file and overwrite if different
+    - name: Copy canonical Docker Compose file
       ansible.builtin.copy:
         src: ../docker-compose.yml
-        dest: "/home/{{ ansible_user }}/app/compose.yml"
+        dest: "{{ project_path }}/compose.yml"
         force: true
+        mode: '0644'
 
     - name: Write WEB_IMAGE for Docker Compose
       ansible.builtin.copy:
-        dest: "/home/{{ ansible_user }}/app/.env"
-        content: "WEB_IMAGE={{ web_image | mandatory }}\n"
-        mode: "0644"
+        dest: "{{ project_path }}/.env"
+        content: |
+          WEB_IMAGE={{ web_image | mandatory }}
+          APP_VERSION={{ web_image | mandatory | regex_replace('^.*:', '') }}
+        mode: '0644'
 
     - name: Pull versioned image and restart containers
       community.docker.docker_compose_v2:
@@ -29,4 +33,5 @@
         state: present
         pull: always
         recreate: auto
-
+        scale:
+          web: "{{ web_replicas | int }}"

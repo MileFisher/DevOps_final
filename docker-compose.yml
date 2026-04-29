@@ -1,19 +1,26 @@
 services:
   web:
     image: ${WEB_IMAGE}
-    container_name: final_web
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3001-3002:3000"
     environment:
       - PORT=3000
       - MONGO_URI=mongodb://mongo:27017/products_db
+      - APP_VERSION=${APP_VERSION:-local}
     volumes:
       - uploads_data:/app/public/uploads
     networks:
       - app_network
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   mongo:
     image: mongo:6.0
@@ -24,6 +31,12 @@ services:
       - ./dump:/dump
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
   uploads_data:
