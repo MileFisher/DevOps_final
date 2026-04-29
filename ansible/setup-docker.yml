@@ -1,8 +1,7 @@
 - name: Install Docker Compose with Ansible
   hosts: aws_ec2
-  become: yes
+  become: true
   tasks:
-
     - name: Install prerequisite packages
       ansible.builtin.apt:
         name:
@@ -54,42 +53,11 @@
         state: present
         update_cache: true
 
-    - name: Check if certificate already exists
-      ansible.builtin.stat:
-        path: "/etc/letsencrypt/live/{{ domain_names[0] }}/fullchain.pem"
-      register: cert_data    
-
-    - name: Setup Nginx configuration
-      ansible.builtin.template:
-        src: nginx.conf.j2
-        dest: /etc/nginx/nginx.conf
-        mode: '0644'
-      when: not cert_data.stat.exists
-      notify: Reload Nginx
-
-#    - name: Setup Nginx site configuration
-#      ansible.builtin.template:
-#        src: nginx.conf.j2
-#        dest: /etc/nginx/nginx.conf
-#        mode: '0644'
-#      notify: Reload Nginx
-
-#    - name: Enable the site by creating a symlink
-#      ansible.builtin.file:
-#        src: /etc/nginx/sites-available/{{ env }}
-#        dest: /etc/nginx/sites-enabled/{{ env }}
-#        state: link
-#      notify: Reload Nginx
-
-# TODO: find out if cert creation is run everytime 
-
-    - name: Create SSL certificate via Certbot
-      ansible.builtin.command: >
-        certbot --nginx -d {{ domain_names | join(',')}}
-        --cert-name {{ domain_names[0] }}
-        --non-interactive --agree-tos
-        --email {{ cert_email }}
-      when: not cert_data.stat.exists
+    - name: Ensure Nginx service is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
 
     - name: Create project directory
       ansible.builtin.file:
@@ -97,21 +65,52 @@
         state: directory
         mode: '0755'
 
-    - name: Copy docker-compose.yml to server
-      ansible.builtin.copy:
-        src: "../docker-compose.yml"
-        dest: "/home/{{ ansible_user }}/app/compose.yml"
-        mode: '0644'
+    - name: Check if certificate already exists
+      ansible.builtin.stat:
+        path: "/etc/letsencrypt/live/{{ domain_names[0] }}/fullchain.pem"
+      register: cert_data
 
-    - name: Start Docker Compose
-      community.docker.docker_compose_v2:
-        project_src: "/home/{{ ansible_user }}/app"
-        state: present
-      ignore_errors: true
+    - name: Set SSL status for initial Nginx config
+      ansible.builtin.set_fact:
+        ssl_enabled: "{{ cert_data.stat.exists }}"
+
+    - name: Setup Nginx configuration
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: '0644'
+      notify: Reload Nginx
+
+    - name: Flush Nginx reload before certificate request
+      ansible.builtin.meta: flush_handlers
+
+    - name: Create SSL certificate via Certbot
+      ansible.builtin.command: >
+        certbot --nginx -d {{ domain_names | join(' -d ') }}
+        --cert-name {{ domain_names[0] }}
+        --non-interactive --agree-tos
+        --email {{ cert_email }}
+      when: not cert_data.stat.exists
+
+    - name: Refresh certificate status
+      ansible.builtin.stat:
+        path: "/etc/letsencrypt/live/{{ domain_names[0] }}/fullchain.pem"
+      register: cert_data_after
+
+    - name: Set SSL status for final Nginx config
+      ansible.builtin.set_fact:
+        ssl_enabled: "{{ cert_data_after.stat.exists }}"
+
+    - name: Setup final Nginx configuration
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: '0644'
+      notify: Reload Nginx
 
   handlers:
     - name: Reload Nginx
       ansible.builtin.service:
         name: nginx
         state: reloaded
-      become: yes
+      become: true
