@@ -97,9 +97,11 @@ jobs:
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
             --limit _Staging \
-            -e "web_image=${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.event.workflow_run.head_sha }}"
+            -e "web_image=${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.event.workflow_run.head_sha }}" \
+            -e "grafana_admin_password=${GRAFANA_ADMIN_PASSWORD}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
 
       - name: Staging summary
         run: echo "Staging deployment complete"
@@ -152,9 +154,11 @@ jobs:
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
             --limit _Production \
-            -e "web_image=${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.event.workflow_run.head_sha }}"
+            -e "web_image=${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.event.workflow_run.head_sha }}" \
+            -e "grafana_admin_password=${GRAFANA_ADMIN_PASSWORD}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
 
       - name: Production summary
         if: always()
