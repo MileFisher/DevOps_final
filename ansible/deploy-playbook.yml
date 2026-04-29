@@ -17,7 +17,13 @@
         dest: "/home/{{ ansible_user }}/app/compose.yml"
         force: true
 
-    - name: Pull latest images and restart containers
+    - name: Write WEB_IMAGE for Docker Compose
+      ansible.builtin.copy:
+        dest: "/home/{{ ansible_user }}/app/.env"
+        content: "WEB_IMAGE={{ web_image | mandatory }}\n"
+        mode: "0644"
+
+    - name: Pull versioned image and restart containers
       community.docker.docker_compose_v2:
         project_src: "{{ project_path }}"
         state: present

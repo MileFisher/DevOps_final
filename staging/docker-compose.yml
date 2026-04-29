@@ -1,6 +1,6 @@
 services:
   web:
-    image: ${WEB_IMAGE:-sawbaw1/devops-final:latest}
+    image: ${WEB_IMAGE}
     container_name: staging_web
     restart: unless-stopped
     ports:
