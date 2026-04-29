@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install Ansible and dependencies
         run: |
@@ -58,7 +60,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit _Staging \
+            --limit _Staging
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -81,6 +83,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install Ansible and dependencies
         run: |
@@ -120,7 +124,8 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
-            --limit _Staging 
+            --limit _Staging \
+            -e "web_image=${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.event.workflow_run.head_sha }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -147,6 +152,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install Ansible and dependencies
         run: |
@@ -186,7 +193,8 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/deploy-playbook.yml \
-            --limit _Production 
+            --limit _Production \
+            -e "web_image=${{ secrets.DOCKER_USERNAME }}/devops-final:sha-${{ github.event.workflow_run.head_sha }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
