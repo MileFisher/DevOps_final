@@ -212,8 +212,8 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name!=\"\"}[5m])) * 100",
-          "legendFormat": "{{name}}",
+          "expr": "sum by (container_label_com_docker_compose_service, name) (rate(container_cpu_usage_seconds_total{image!=\"\"}[5m])) * 100",
+          "legendFormat": "{{container_label_com_docker_compose_service}} {{name}}",
           "range": true,
           "refId": "A"
         }
@@ -272,8 +272,8 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "container_memory_working_set_bytes{name!=\"\"}",
-          "legendFormat": "{{name}}",
+          "expr": "container_memory_working_set_bytes{image!=\"\"}",
+          "legendFormat": "{{container_label_com_docker_compose_service}} {{name}}",
           "range": true,
           "refId": "A"
         }
@@ -423,7 +423,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "time() - container_last_seen{name!=\"\"}",
+          "expr": "time() - container_last_seen{image!=\"\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "{{name}}",
@@ -449,6 +449,7 @@
             "indexByName": {},
             "renameByName": {
               "Value": "seconds since last seen",
+              "container_label_com_docker_compose_service": "compose service",
               "name": "container"
             }
           }
