@@ -3,7 +3,7 @@ services:
     image: ${WEB_IMAGE}
     restart: unless-stopped
     ports:
-      - "3001-3002:3000"
+      - "3000"
     environment:
       - PORT=3000
       - MONGO_URI=mongodb://mongo:27017/products_db
@@ -90,20 +90,23 @@ services:
     networks:
       - app_network
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2        
     container_name: final_cadvisor
     restart: unless-stopped
     privileged: true
     command:
       - "--docker_only=true"
       - "--housekeeping_interval=10s"
+      - "--store_container_labels=false"
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
+      - /var/run:/var/run:rw                            
+      - /var/run/docker.sock:/var/run/docker.sock:rw   
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro            
     devices:
       - /dev/kmsg
     networks:
