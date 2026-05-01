@@ -11,8 +11,7 @@ http {
 	keepalive_timeout 65;
 
 	upstream app_backend {
-		server 127.0.0.1:3000;
-		server 127.0.0.1:3000;
+    	server web:3000;
 	}
 
 	server {
