@@ -3,7 +3,7 @@ services:
     image: ${WEB_IMAGE}
     restart: unless-stopped
     ports:
-      - "3000"
+      - "127.0.0.1:3001-3002:3000"
     environment:
       - PORT=3000
       - MONGO_URI=mongodb://mongo:27017/products_db
