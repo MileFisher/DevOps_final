@@ -69,6 +69,8 @@ services:
       - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL}
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_USERS_DEFAULT_THEME=light
+      - GF_SECURITY_ALLOW_EMBEDDING=true          
+      - GF_SERVER_PROTOCOL=http  
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
