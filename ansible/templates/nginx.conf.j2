@@ -5,21 +5,22 @@ events {
 }
 
 http {
-	include mime.types;
+	include /etc/nginx/mime.types;
 	default_type application/octet-stream;
 	sendfile on;
 	keepalive_timeout 65;
 
 	upstream app_backend {
-    	server web:3000;
+		server 127.0.0.1:3001;
+		server 127.0.0.1:3002;
 	}
 
 	server {
 		listen 80;
 		server_name {{ domain_names | join(' ') }};
 
-		access_log /var/log/nginx/aqiu.access.log;
-		error_log /var/log/nginx/aqiu.error.log;
+		access_log /var/log/nginx/access.log;
+		error_log /var/log/nginx/error.log;
 
 {% if ssl_enabled | bool %}
 		location / {
@@ -66,8 +67,8 @@ http {
 		include /etc/letsencrypt/options-ssl-nginx.conf;
 		ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-		access_log /var/log/nginx/aqiu.ssl.access.log;
-		error_log /var/log/nginx/aqiu.ssl.error.log;
+		access_log /var/log/nginx/ssl.access.log;
+		error_log /var/log/nginx/ssl.error.log;
 
 		location = /grafana {
 			return 301 /grafana/;
