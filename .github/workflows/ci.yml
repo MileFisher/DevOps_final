@@ -31,6 +31,10 @@ jobs:
         working-directory: node/app
         run: node --check main.js
 
+      - name: Run tests
+        working-directory: node/app
+        run: npm test
+
       - name: Trivy filesystem scan
         uses: aquasecurity/trivy-action@master
         with:
