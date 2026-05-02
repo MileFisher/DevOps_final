@@ -27,8 +27,12 @@ http {
 			return 301 https://$host$request_uri;
 		}
 {% else %}
+		location /grafana {
+			return 302 /grafana/;
+		}
+
 		location /grafana/ {
-			proxy_pass http://127.0.0.1:3003/;
+			proxy_pass http://127.0.0.1:3003;
 			proxy_http_version 1.1;
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection 'upgrade';
@@ -66,8 +70,12 @@ http {
 		access_log /var/log/nginx/ssl.access.log;
 		error_log /var/log/nginx/ssl.error.log;
 
+		location /grafana {
+			return 302 /grafana/;
+		}
+
 		location /grafana/ {
-			proxy_pass http://127.0.0.1:3003/;
+			proxy_pass http://127.0.0.1:3003;
 			proxy_http_version 1.1;
 			proxy_set_header Upgrade $http_upgrade;
 			proxy_set_header Connection 'upgrade';
