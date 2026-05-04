@@ -25,6 +25,13 @@ scrape_configs:
     static_configs:
       - targets:
           - cadvisor:8080
-      
+
+  - job_name: webapp
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - app-web-1:3000
+          - app-web-2:3000   
+             
 rule_files:
   - /etc/prometheus/alerts.yml
