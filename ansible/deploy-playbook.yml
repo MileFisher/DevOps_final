@@ -74,6 +74,16 @@
         scale:
           web: "{{ web_replicas | int }}"
 
+    - name: Reload Prometheus configuration
+      ansible.builtin.uri:
+        url: http://127.0.0.1:9090/-/reload
+        method: POST
+        status_code: 200
+      register: prometheus_reload
+      retries: 5
+      delay: 3
+      until: prometheus_reload.status == 200
+
     - name: Remove unused Docker images after deployment
       ansible.builtin.command: docker image prune -af
       register: image_prune_after

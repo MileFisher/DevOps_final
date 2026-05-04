@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const os = require('os');
 const productRoutes = require('./routes/productRoutes');
 const dataSource = require('./services/dataSource');
+const { metricsMiddleware, renderPrometheusMetrics } = require('./services/metrics.service');
 const uiRoutes = require('./routes/uiRoutes');
 const path = require('path');
 const fs = require('fs');
@@ -46,6 +47,7 @@ const mongoErrorCounter = new promClient.Counter({
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(metricsMiddleware);
 
 // ── Metrics middleware — must be before routes ────────────────
 app.use((req, res, next) => {
@@ -75,6 +77,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 
+<<<<<<< HEAD
 // ── Metrics endpoint for Prometheus to scrape ─────────────────
 app.get('/metrics', async (req, res) => {
   try {
@@ -85,6 +88,12 @@ app.get('/metrics', async (req, res) => {
   }
 });
 // ─────────────────────────────────────────────────────────────
+=======
+app.get('/metrics', (req, res) => {
+  res.type('text/plain; version=0.0.4; charset=utf-8');
+  res.send(renderPrometheusMetrics());
+});
+>>>>>>> origin/main
 
 app.get('/health', (req, res) => {
   res.status(200).json({

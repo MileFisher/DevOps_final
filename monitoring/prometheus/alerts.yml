@@ -8,3 +8,11 @@ groups:
           severity: critical
         annotations:
           summary: "Service {{ $labels.job }} is DOWN"
+
+      - alert: ApplicationErrorsDetected
+        expr: sum(rate(app_http_errors_total[1m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Application HTTP errors are being returned"

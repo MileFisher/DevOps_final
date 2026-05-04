@@ -8,6 +8,14 @@ scrape_configs:
       - targets:
           - prometheus:9090
 
+  - job_name: web-application
+    metrics_path: /metrics
+    dns_sd_configs:
+      - names:
+          - web
+        type: A
+        port: 3000
+
   - job_name: node-exporter
     static_configs:
       - targets:
