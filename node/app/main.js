@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const os = require('os');
 const productRoutes = require('./routes/productRoutes');
 const dataSource = require('./services/dataSource');
-const { metricsMiddleware, renderPrometheusMetrics } = require('./services/metrics.service');
 const uiRoutes = require('./routes/uiRoutes');
 const path = require('path');
 const fs = require('fs');
