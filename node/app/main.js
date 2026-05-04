@@ -77,7 +77,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 
-<<<<<<< HEAD
 // ── Metrics endpoint for Prometheus to scrape ─────────────────
 app.get('/metrics', async (req, res) => {
   try {
@@ -88,12 +87,6 @@ app.get('/metrics', async (req, res) => {
   }
 });
 // ─────────────────────────────────────────────────────────────
-=======
-app.get('/metrics', (req, res) => {
-  res.type('text/plain; version=0.0.4; charset=utf-8');
-  res.send(renderPrometheusMetrics());
-});
->>>>>>> origin/main
 
 app.get('/health', (req, res) => {
   res.status(200).json({
