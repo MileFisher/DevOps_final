@@ -58,3 +58,13 @@ curl -s http://127.0.0.1:3001/health
 curl -s http://127.0.0.1:3001/products
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3001/products/not-found-id
 ```
+
+If Grafana Explore does not show `app_http_requests_total`, verify the scrape path on the server:
+
+```bash
+cd /home/ubuntu/app
+curl -s http://127.0.0.1:3001/metrics | grep app_http_requests_total
+docker compose exec prometheus wget -qO- http://web:3000/metrics | grep app_http_requests_total
+curl -X POST http://127.0.0.1:9090/-/reload
+curl -s "http://127.0.0.1:9090/api/v1/query?query=app_http_requests_total"
+```
