@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const os = require('os');
 const productRoutes = require('./routes/productRoutes');
 const dataSource = require('./services/dataSource');
+const { metricsMiddleware, renderPrometheusMetrics } = require('./services/metrics.service');
 const uiRoutes = require('./routes/uiRoutes');
 const path = require('path');
 const fs = require('fs'); 
@@ -11,11 +12,17 @@ const fs = require('fs');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(metricsMiddleware);
 
 // view engine and static
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/metrics', (req, res) => {
+  res.type('text/plain; version=0.0.4; charset=utf-8');
+  res.send(renderPrometheusMetrics());
+});
 
 app.get('/health', (req, res) => {
   res.status(200).json({

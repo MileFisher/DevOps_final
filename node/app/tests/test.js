@@ -6,6 +6,13 @@ function buildRes() {
 	};
 }
 
+function buildMetricsRes(statusCode = 200) {
+	const EventEmitter = require('events');
+	const res = new EventEmitter();
+	res.statusCode = statusCode;
+	return res;
+}
+
 describe('product controller and ui routes', () => {
 	beforeEach(() => {
 		jest.resetModules();
@@ -79,5 +86,54 @@ describe('product controller and ui routes', () => {
 				source: 'in-memory'
 			})
 		);
+	});
+});
+
+describe('custom application metrics', () => {
+	beforeEach(() => {
+		jest.resetModules();
+	});
+
+	test('metrics middleware records request and latency counters', () => {
+		const metrics = require('../services/metrics.service');
+		metrics.resetMetrics();
+
+		const req = {
+			method: 'GET',
+			baseUrl: '/products',
+			route: { path: '/:id' },
+			originalUrl: '/products/123'
+		};
+		const res = buildMetricsRes(200);
+		const next = jest.fn();
+
+		metrics.metricsMiddleware(req, res, next);
+		res.emit('finish');
+
+		const output = metrics.renderPrometheusMetrics();
+
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(output).toContain('app_http_requests_total{method="GET",route="/products/:id",status_code="200",status_class="2xx"} 1');
+		expect(output).toContain('app_http_request_duration_seconds_count{method="GET",route="/products/:id",status_code="200",status_class="2xx"} 1');
+	});
+
+	test('metrics middleware records error counts for 4xx and 5xx responses', () => {
+		const metrics = require('../services/metrics.service');
+		metrics.resetMetrics();
+
+		const req = {
+			method: 'POST',
+			baseUrl: '/products',
+			route: { path: '/' },
+			originalUrl: '/products'
+		};
+		const res = buildMetricsRes(500);
+
+		metrics.metricsMiddleware(req, res, jest.fn());
+		res.emit('finish');
+
+		const output = metrics.renderPrometheusMetrics();
+
+		expect(output).toContain('app_http_errors_total{method="POST",route="/products",status_code="500",status_class="5xx"} 1');
 	});
 });
