@@ -19,16 +19,13 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Cache Ansible dependencies
+      - name: Cache ansible
         uses: actions/cache@v4
         with:
           path: |
-            ~/.local/share/pipx
-            ~/.ansible/collections
-          key: ansible-cache-${{ runner.os }}
-          restore-keys: |
-            ansible-cache-${{ runner.os }}-
-
+            /opt/pipx/venvs/ansible-core 
+            ~/.local/pipx
+          key: ${{ runner.os }}-ansible
 
       - name: Install Ansible and dependencies
         run: |
