@@ -3,11 +3,15 @@
 ![CI](https://github.com/MileFisher/DevOps_final/actions/workflows/ci.yml/badge.svg)
 ![CD](https://github.com/MileFisher/DevOps_final/actions/workflows/cd.yml/badge.svg)
 
-## Tier 2 Observability
+This project is our final project for the course Software Deployment and Operation for semester 2/25-26. 
 
-The application exposes custom Prometheus metrics at `/metrics` for Advanced Observability:
+We are group 25 and we have 3 members.
 
-- `app_http_requests_total` for request rates.
-- `app_http_errors_total` for 4xx/5xx error counts.
-- `app_http_request_duration_seconds` for latency percentiles.
-- `app_http_requests_in_flight` for live request concurrency.
+- Saw Baw Mu Thaw - 523k0077
+- Nan Hnin Yai Kyi - 523k0051
+- Aung Khant Paing - 532k0071
+
+## Note
+
+You will need terraform and ansible installed.
+
