@@ -47,6 +47,7 @@ jobs:
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
             --limit _Staging
+            -e "web_replicas=2"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
@@ -56,6 +57,7 @@ jobs:
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
             --limit _Production
+            -e "web_replicas=3"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
