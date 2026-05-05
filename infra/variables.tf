@@ -7,7 +7,7 @@ variable "instance_name" {
 variable "instance_type" {
 	description = "The EC2 instance's type"
 	type = string
-	default = "t3.micro"
+	default = "t3.small"
 }
 
 variable "root_volume_size" {
