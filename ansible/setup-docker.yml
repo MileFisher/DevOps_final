@@ -1,8 +1,6 @@
 - name: Install Docker Compose with Ansible
   hosts: aws_ec2
   become: true
-  vars:
-    web_replicas : "{{ web_replicas | mandatory }}"
   tasks:
     - name: Install prerequisite packages
       ansible.builtin.apt:
