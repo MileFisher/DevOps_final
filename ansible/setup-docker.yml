@@ -74,6 +74,10 @@
       ansible.builtin.set_fact:
         ssl_enabled: "{{ cert_data.stat.exists }}"
 
+    - name: Set web replicas
+      ansible.builtin.set_fact:
+        web_replicas: "{{ web_replicas | default(2) }}"
+
     - name: Setup Nginx configuration
       ansible.builtin.template:
         src: nginx.conf.j2
