@@ -9,7 +9,7 @@ We are group 25 and we have 3 members.
 
 - Saw Baw Mu Thaw - 523k0077
 - Nan Hnin Yai Kyi - 523k0051
-- Aung Khant Paing - 532k0071
+- Aung Khant Paing - 532k0072
 
 ## Note
 
