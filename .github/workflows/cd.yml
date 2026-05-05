@@ -19,16 +19,13 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Cache Ansible dependencies
+      - name: Cache ansible
         uses: actions/cache@v4
         with:
           path: |
-            ~/.local/share/pipx
-            ~/.ansible/collections
-          key: ansible-cache-${{ runner.os }}
-          restore-keys: |
-            ansible-cache-${{ runner.os }}-
-
+            /opt/pipx/venvs/ansible-core 
+            ~/.local/pipx
+          key: ${{ runner.os }}-ansible
 
       - name: Install Ansible and dependencies
         run: |
@@ -57,7 +54,7 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit _Staging
+            --limit _Staging \
             -e "web_replicas=2"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
@@ -67,8 +64,8 @@ jobs:
           ansible-playbook \
             -i ansible/inventory.aws_ec2.yml \
             ansible/setup-docker.yml \
-            --limit _Production
-            -e "web_replicas=3"
+            --limit _Production \
+            -e "web_replicas=2"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
